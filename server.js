@@ -3,19 +3,21 @@ const axios = require("axios");
 const fs = require("fs");
 const app = express();
 
+app.set("view engine", "ejs");
+
 const PORT = 3000;
 
-// Search query
-const query = "world%20cup";
+// Search query (%20 == space)
+const query = "latin%20music";
 
 // API key
-const key = "yourapikey";
+const key = "examplekey";
 
-// Page token
+// Page token (example)
 const pageToken = "CGQQAA";
 
 // Complete url
-const apiUrl = `https://www.googleapis.com/youtube/v3/search?key=${key}=video&part=snippet&maxResults=50&regionCode=US&order=date&pageToken=${pageToken}&q=${query}&relevanceLanguage=en`;
+const apiUrl = `https://www.googleapis.com/youtube/v3/search?key=${key}&type=video&part=snippet&maxResults=50&regionCode=US&order=date&pageToken=${pageToken}&q=${query}&relevanceLanguage=en`;
 
 async function getChannelStats(channelId) {
   let channelUrl = `https://www.googleapis.com/youtube/v3/channels?key=${key}&part=statistics,snippet&id=${channelId}`;
@@ -27,8 +29,8 @@ async function getChannelStats(channelId) {
     let stats = {};
 
     if (
-      Number(data.statistics.subscriberCount) >= 40000 &&
-      Number(data.statistics.subscriberCount) <= 150000
+      Number(data.statistics.subscriberCount) >= 20000 &&
+      Number(data.statistics.subscriberCount) <= 120000
     ) {
       stats = {
         title: data.snippet.title,
@@ -58,6 +60,7 @@ app.get("/1", async (req, res) => {
     fs.writeFileSync("./list/ids.txt", "");
     fs.writeFileSync("./list/titles.txt", "");
     fs.writeFileSync("./data/stats.txt", "");
+    fs.writeFileSync("data.json", "");
 
     console.log("File contents removed successfully.");
 
@@ -146,7 +149,7 @@ app.get("/4", (req, res) => {
   try {
     const stringData = fs.readFileSync("./data/stats.txt", "utf-8");
     const slicedData = "[" + stringData.slice(0, -1) + "]";
-    fs.writeFileSync("final.json", slicedData, { flag: "a" });
+    fs.writeFileSync("data.json", slicedData, { flag: "a" });
 
     console.log(`Finalized correctly!`);
 
@@ -154,6 +157,17 @@ app.get("/4", (req, res) => {
   } catch (e) {
     console.log(e.message);
     res.status(500);
+  }
+});
+
+app.get("/", (req, res) => {
+  try {
+    const stringData = fs.readFileSync("data.json", "utf-8");
+    const jsonData = JSON.parse(stringData);
+    res.render("index", { data: jsonData });
+  } catch (e) {
+    console.log("There was an error while gettine data.json data");
+    res.send(e.message);
   }
 });
 
